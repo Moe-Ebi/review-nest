@@ -82,9 +82,14 @@ export default async function DashboardPage({ searchParams }: Props) {
             {locations.map((loc) => (
               <div
                 key={loc.id}
-                className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-2"
+                className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-2 hover:border-gray-600 transition"
               >
-                <p className="font-semibold text-white">{loc.business_name}</p>
+                <a
+                  href={`/dashboard/locations/${loc.id}`}
+                  className="font-semibold text-white hover:text-blue-400 transition"
+                >
+                  {loc.business_name}
+                </a>
                 {loc.address && (
                   <p className="text-sm text-gray-400">{loc.address}</p>
                 )}
@@ -99,10 +104,13 @@ export default async function DashboardPage({ searchParams }: Props) {
                     Last synced: {new Date(loc.last_synced_at).toLocaleString()}
                   </p>
                 )}
-                <div className="mt-auto pt-3 flex items-center gap-2">
-                  <span className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 px-2.5 py-1 rounded-full">
-                    Connected
-                  </span>
+                <div className="mt-auto pt-3 flex items-center gap-2 flex-wrap">
+                  <a
+                    href={`/dashboard/locations/${loc.id}`}
+                    className="text-xs text-blue-400 hover:text-blue-300 border border-blue-500/30 hover:border-blue-400 px-2.5 py-1 rounded-full transition"
+                  >
+                    Settings & preview
+                  </a>
                   <form action={syncLocation}>
                     <input type="hidden" name="locationId" value={loc.id} />
                     <button
