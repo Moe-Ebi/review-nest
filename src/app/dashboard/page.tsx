@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logout } from '@/app/actions/auth'
+import { syncLocation } from '@/app/actions/sync'
 
 interface Props {
   searchParams: Promise<{ error?: string }>
@@ -23,7 +24,7 @@ export default async function DashboardPage({ searchParams }: Props) {
   const admin = createAdminClient()
   const { data: locations } = await admin
     .from('locations')
-    .select('id, business_name, address, google_connection_id')
+    .select('id, business_name, address, google_connection_id, last_synced_at, review_count')
     .order('created_at', { ascending: false })
 
   return (
@@ -87,10 +88,30 @@ export default async function DashboardPage({ searchParams }: Props) {
                 {loc.address && (
                   <p className="text-sm text-gray-400">{loc.address}</p>
                 )}
-                <div className="mt-auto pt-3">
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-xs text-yellow-400">★</span>
+                  <span className="text-xs text-gray-400">
+                    {loc.review_count ?? 0} reviews cached
+                  </span>
+                </div>
+                {loc.last_synced_at && (
+                  <p className="text-xs text-gray-600">
+                    Last synced: {new Date(loc.last_synced_at).toLocaleString()}
+                  </p>
+                )}
+                <div className="mt-auto pt-3 flex items-center gap-2">
                   <span className="text-xs text-green-400 bg-green-500/10 border border-green-500/30 px-2.5 py-1 rounded-full">
                     Connected
                   </span>
+                  <form action={syncLocation}>
+                    <input type="hidden" name="locationId" value={loc.id} />
+                    <button
+                      type="submit"
+                      className="text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-2.5 py-1 rounded-full transition"
+                    >
+                      Sync reviews
+                    </button>
+                  </form>
                 </div>
               </div>
             ))}
