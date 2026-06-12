@@ -21,7 +21,7 @@ export async function GET() {
     response_type: 'code',
     scope: SCOPES,
     access_type: 'offline',
-    prompt: 'consent',
+    prompt: 'select_account consent',
   })
 
   return NextResponse.redirect(

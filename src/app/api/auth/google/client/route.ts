@@ -23,7 +23,7 @@ export async function GET() {
     response_type: 'code',
     scope: SCOPES,
     access_type: 'offline',
-    prompt: 'consent',
+    prompt: 'select_account consent',
     // Encode who triggered this so the callback can tag locations correctly
     state: Buffer.from(JSON.stringify({ source: 'client', email: user.email })).toString('base64'),
   })
