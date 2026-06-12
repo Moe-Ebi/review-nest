@@ -62,8 +62,13 @@ export async function fetchGoogleLocations(connectionId: string) {
     'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
     { headers: { Authorization: `Bearer ${accessToken}` } }
   )
-  if (!accountsRes.ok) return null
+  if (!accountsRes.ok) {
+    const err = await accountsRes.text()
+    console.error('[Google] accounts fetch failed:', accountsRes.status, err)
+    return null
+  }
   const accountsData = await accountsRes.json()
+  console.log('[Google] accounts response:', JSON.stringify(accountsData))
   const accounts: { name: string }[] = accountsData.accounts ?? []
 
   const allLocations: GoogleLocation[] = []
@@ -82,8 +87,13 @@ export async function fetchGoogleLocations(connectionId: string) {
         `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?${params}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       )
-      if (!locRes.ok) break
+      if (!locRes.ok) {
+        const err = await locRes.text()
+        console.error('[Google] locations fetch failed:', locRes.status, err)
+        break
+      }
       const locData = await locRes.json()
+      console.log('[Google] locations response for', account.name, ':', JSON.stringify(locData))
       allLocations.push(...(locData.locations ?? []))
       pageToken = locData.nextPageToken
     } while (pageToken)
