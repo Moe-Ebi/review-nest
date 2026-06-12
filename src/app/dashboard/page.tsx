@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logout } from '@/app/actions/auth'
 import { syncLocation } from '@/app/actions/sync'
+import { approveRequest, denyRequest } from '@/app/actions/admin'
 
 interface Props {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; approved?: string }>
 }
 
 const connectErrors: Record<string, string> = {
@@ -19,9 +20,16 @@ export default async function DashboardPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { error } = await searchParams
+  const { error, approved } = await searchParams
 
   const admin = createAdminClient()
+
+  const { data: pendingRequests } = await admin
+    .from('team_allowlist')
+    .select('email, name, role, created_at')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+
   const { data: locations } = await admin
     .from('locations')
     .select('id, business_name, address, google_connection_id, last_synced_at, review_count')
@@ -52,6 +60,46 @@ export default async function DashboardPage({ searchParams }: Props) {
         {error && (
           <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
             {connectErrors[error] ?? 'Something went wrong.'}
+          </div>
+        )}
+
+        {approved && (
+          <div className="mb-6 bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-4 py-3">
+            Access approved — the user can now log in.
+          </div>
+        )}
+
+        {/* Pending access requests */}
+        {pendingRequests && pendingRequests.length > 0 && (
+          <div className="mb-8 bg-yellow-500/5 border border-yellow-500/20 rounded-2xl p-6">
+            <h3 className="text-base font-semibold text-yellow-400 mb-4">
+              Pending access requests ({pendingRequests.length})
+            </h3>
+            <div className="flex flex-col gap-3">
+              {pendingRequests.map((req) => (
+                <div key={req.email} className="flex items-center justify-between gap-4 bg-gray-900 rounded-xl px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-white">{req.name ?? 'Unknown'}</p>
+                    <p className="text-xs text-gray-400">{req.email}</p>
+                    <span className="text-xs text-gray-600 capitalize">{req.role}</span>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <form action={approveRequest}>
+                      <input type="hidden" name="email" value={req.email} />
+                      <button type="submit" className="text-xs bg-green-600 hover:bg-green-500 text-white font-medium px-3 py-1.5 rounded-lg transition">
+                        Approve
+                      </button>
+                    </form>
+                    <form action={denyRequest}>
+                      <input type="hidden" name="email" value={req.email} />
+                      <button type="submit" className="text-xs bg-gray-700 hover:bg-red-600 text-white font-medium px-3 py-1.5 rounded-lg transition">
+                        Deny
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

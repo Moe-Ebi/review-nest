@@ -27,15 +27,17 @@ export async function proxy(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login')
-  const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
+  const path = request.nextUrl.pathname
+  const isAuthPage = path === '/login' || path === '/signup'
+  const isDashboard = path.startsWith('/dashboard')
+  const isClient = path.startsWith('/client')
 
-  // Redirect unauthenticated users away from dashboard
-  if (isDashboard && !user) {
+  // Redirect unauthenticated users away from protected areas
+  if ((isDashboard || isClient) && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // Redirect authenticated users away from login
+  // Redirect authenticated users away from login/signup
   if (isAuthPage && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
@@ -44,5 +46,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/client/:path*', '/login', '/signup'],
 }

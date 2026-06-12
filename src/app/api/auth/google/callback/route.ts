@@ -6,19 +6,28 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const code = searchParams.get('code')
   const error = searchParams.get('error')
+  const stateParam = searchParams.get('state')
+
+  // Decode state to know if this came from a client connect or admin connect
+  let isClientConnect = false
+  let clientEmail: string | null = null
+  if (stateParam) {
+    try {
+      const decoded = JSON.parse(Buffer.from(stateParam, 'base64').toString())
+      isClientConnect = decoded.source === 'client'
+      clientEmail = decoded.email ?? null
+    } catch { /* ignore malformed state */ }
+  }
+
+  const errorRedirect = isClientConnect ? '/client?error=google_denied' : '/dashboard?error=google_denied'
 
   if (error || !code) {
-    return NextResponse.redirect(
-      new URL('/dashboard?error=google_denied', process.env.NEXTAUTH_URL!)
-    )
+    return NextResponse.redirect(new URL(errorRedirect, process.env.NEXTAUTH_URL!))
   }
 
-  // Verify the user is logged in to our dashboard
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.redirect(new URL('/login', process.env.NEXTAUTH_URL!))
-  }
+  if (!user) return NextResponse.redirect(new URL('/login', process.env.NEXTAUTH_URL!))
 
   // Exchange code for tokens
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
@@ -34,20 +43,16 @@ export async function GET(request: NextRequest) {
   })
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(
-      new URL('/dashboard?error=token_exchange', process.env.NEXTAUTH_URL!)
-    )
+    return NextResponse.redirect(new URL(errorRedirect, process.env.NEXTAUTH_URL!))
   }
 
   const tokens = await tokenRes.json()
 
-  // Get the Google account email
   const profileRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: { Authorization: `Bearer ${tokens.access_token}` },
   })
   const profile = await profileRes.json()
 
-  // Save connection to Supabase (upsert so reconnecting updates tokens)
   const admin = createAdminClient()
   const { data: connection, error: dbError } = await admin
     .from('google_connections')
@@ -66,12 +71,16 @@ export async function GET(request: NextRequest) {
     .single()
 
   if (dbError || !connection) {
+    return NextResponse.redirect(new URL(errorRedirect, process.env.NEXTAUTH_URL!))
+  }
+
+  // For client connects, go to the client-specific locations picker
+  if (isClientConnect) {
     return NextResponse.redirect(
-      new URL('/dashboard?error=db_save', process.env.NEXTAUTH_URL!)
+      new URL(`/client/connect/${connection.id}`, process.env.NEXTAUTH_URL!)
     )
   }
 
-  // Redirect to the locations picker for this connection
   return NextResponse.redirect(
     new URL(`/dashboard/connect/${connection.id}`, process.env.NEXTAUTH_URL!)
   )

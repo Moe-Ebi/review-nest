@@ -5,8 +5,10 @@ interface Props {
 }
 
 const errorMessages: Record<string, string> = {
-  not_allowed: 'This email is not authorised to access the dashboard.',
+  not_allowed: 'No account found with this email. Please sign up first.',
   invalid_credentials: 'Incorrect email or password.',
+  pending: 'Your account is awaiting approval. You will be notified once an admin approves it.',
+  denied: 'Your access request was not approved. Please contact us if you think this is a mistake.',
 }
 
 export default async function LoginPage({ searchParams }: Props) {
@@ -71,8 +73,9 @@ export default async function LoginPage({ searchParams }: Props) {
           </form>
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">
-          Access is restricted to authorised team members only.
+        <p className="text-center text-gray-500 text-xs mt-6">
+          Don't have an account?{' '}
+          <a href="/signup" className="text-blue-400 hover:text-blue-300">Request access</a>
         </p>
       </div>
     </main>
