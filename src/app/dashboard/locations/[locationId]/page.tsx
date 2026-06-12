@@ -99,14 +99,31 @@ export default async function LocationSettingsPage({ params, searchParams }: Pro
             />
           </div>
 
-          {/* Live preview */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold">Live preview</h3>
-              <span className="text-xs text-gray-500">Updates as you change settings</span>
+          {/* Right column: preview + embed snippet */}
+          <div className="flex flex-col gap-6">
+            {/* Live preview */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold">Live preview</h3>
+                <span className="text-xs text-gray-500">Updates as you change settings</span>
+              </div>
+              <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+                <WidgetPreview initialSettings={settings} reviews={reviews ?? []} />
+              </div>
             </div>
+
+            {/* Embed snippet */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
-              <WidgetPreview initialSettings={settings} reviews={reviews ?? []} />
+              <h3 className="text-base font-semibold mb-1">Embed on your client's website</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Paste this single line of HTML anywhere on the client's website where you want the widget to appear.
+              </p>
+              <div className="bg-gray-950 border border-gray-700 rounded-xl p-4 font-mono text-xs text-green-400 break-all select-all">
+                {`<script src="${process.env.NEXTAUTH_URL}/widget.js" data-location="${locationId}" async></script>`}
+              </div>
+              <p className="text-gray-600 text-xs mt-3">
+                The widget auto-updates every 24 hours. No other changes needed after pasting.
+              </p>
             </div>
           </div>
         </div>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Widget Test Page</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #111; }
+    .info { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; }
+    .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>ReviewNest — Widget Test Page</h1>
+
+  <div class="info">
+    <strong>How to use:</strong> Replace <code>YOUR_LOCATION_ID</code> in the script tag below with a real location ID from your dashboard.
+    The widget will load reviews from your local dev server.
+  </div>
+
+  <div class="section">
+    <h2>Widget preview</h2>
+    <p>The widget renders below this paragraph, inside its own isolated Shadow DOM.</p>
+
+    <!-- PASTE YOUR EMBED SNIPPET HERE — replace YOUR_LOCATION_ID -->
+    <script src="http://localhost:3000/widget.js" data-location="YOUR_LOCATION_ID" async></script>
+  </div>
+
+  <div class="section">
+    <h2>Surrounding content</h2>
+    <p>This text proves the widget does not affect the host page's styles. Everything here looks exactly the same as it would without the widget.</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+  </div>
+</body>
+</html>
