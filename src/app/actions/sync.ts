@@ -10,7 +10,12 @@ export async function syncLocation(formData: FormData) {
   if (!user) redirect('/login')
 
   const locationId = formData.get('locationId') as string
-  await syncReviewsForLocation(locationId)
+  const result = await syncReviewsForLocation(locationId)
+  if (result.error) {
+    console.error('[Sync] location', locationId, 'failed:', result.error)
+  } else {
+    console.log('[Sync] location', locationId, 'synced', result.synced, 'reviews')
+  }
 
   redirect('/dashboard')
 }

@@ -35,28 +35,65 @@ export async function syncReviewsForLocation(locationId: string): Promise<{
     return { synced: 0, error: 'Could not refresh Google access token' }
   }
 
-  // Fetch all review pages
+  // The Business Information API stores location ids as "locations/{id}" (no
+  // account prefix), but the v4 reviews API needs the full resource path
+  // "accounts/{accountId}/locations/{id}/reviews". Look up the account(s) for
+  // this connection and find the one that owns this location.
+  const accountsRes = await fetch(
+    'https://mybusinessaccountmanagement.googleapis.com/v1/accounts',
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  )
+  if (!accountsRes.ok) {
+    const body = await accountsRes.text()
+    console.error('[Reviews] accounts fetch failed:', accountsRes.status, body)
+    return { synced: 0, error: `Google accounts error: ${accountsRes.status} ${body}` }
+  }
+  const accountsData = await accountsRes.json()
+  const accounts: { name: string }[] = accountsData.accounts ?? []
+  const locationNumericId = location.google_location_id.replace(/^locations\//, '')
+
+  // Fetch all review pages. Try each account until one owns this location.
   const allReviews: GoogleReview[] = []
-  let pageToken: string | undefined
+  let matched = false
+  let lastError = ''
 
-  do {
-    const params = new URLSearchParams({ pageSize: '50' })
-    if (pageToken) params.set('pageToken', pageToken)
+  for (const account of accounts) {
+    let pageToken: string | undefined
+    const accountReviews: GoogleReview[] = []
+    let accountOk = true
 
-    const res = await fetch(
-      `https://mybusiness.googleapis.com/v4/${location.google_location_id}/reviews?${params}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
-    )
+    do {
+      const params = new URLSearchParams({ pageSize: '50' })
+      if (pageToken) params.set('pageToken', pageToken)
 
-    if (!res.ok) {
-      const body = await res.text()
-      return { synced: 0, error: `Google API error: ${res.status} ${body}` }
+      const res = await fetch(
+        `https://mybusiness.googleapis.com/v4/${account.name}/locations/${locationNumericId}/reviews?${params}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+
+      if (!res.ok) {
+        const body = await res.text()
+        console.error('[Reviews] fetch failed for', account.name, ':', res.status, body)
+        lastError = `Google API error: ${res.status} ${body}`
+        accountOk = false
+        break
+      }
+
+      const data = await res.json()
+      accountReviews.push(...(data.reviews ?? []))
+      pageToken = data.nextPageToken
+    } while (pageToken)
+
+    if (accountOk) {
+      allReviews.push(...accountReviews)
+      matched = true
+      break
     }
+  }
 
-    const data = await res.json()
-    allReviews.push(...(data.reviews ?? []))
-    pageToken = data.nextPageToken
-  } while (pageToken)
+  if (!matched) {
+    return { synced: 0, error: lastError || 'No Google account owns this location' }
+  }
 
   if (allReviews.length === 0) {
     await admin
