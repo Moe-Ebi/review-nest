@@ -99,23 +99,23 @@ function ReviewCard({
 
   return (
     <div
-      className="rounded-xl border p-4 flex flex-col gap-3"
+      className="rounded-xl border p-3 sm:p-4 flex flex-col gap-2 sm:gap-3"
       style={{
         backgroundColor: settings.background_color,
         borderColor: `${settings.accent_color}33`,
         color: settings.text_color,
       }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         <Avatar name={review.reviewer_name} photoUrl={review.reviewer_photo_url} />
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{review.reviewer_name}</p>
+          <p className="font-semibold text-xs sm:text-sm truncate">{review.reviewer_name}</p>
           <StarRating rating={review.star_rating} color={settings.accent_color} />
         </div>
-        <span className="text-xs opacity-50 shrink-0">{date}</span>
+        <span className="text-xs opacity-50 shrink-0 ml-2">{date}</span>
       </div>
       {review.review_text && (
-        <p className={`text-sm opacity-80 leading-relaxed ${compact ? 'line-clamp-3' : 'line-clamp-4'}`}>
+        <p className={`text-xs sm:text-sm opacity-80 leading-relaxed ${compact ? 'line-clamp-3 sm:line-clamp-3' : 'line-clamp-3 sm:line-clamp-4 lg:line-clamp-5'}`}>
           {review.review_text}
         </p>
       )}
@@ -125,7 +125,7 @@ function ReviewCard({
 
 function GridLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
       {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
         <ReviewCard key={i} review={r} settings={settings} compact />
       ))}
@@ -145,16 +145,32 @@ function ListLayout({ reviews, settings }: { reviews: ReviewData[]; settings: Wi
 
 function CarouselLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
   const [idx, setIdx] = useState(0)
+  const [swipeStart, setSwipeStart] = useState(0)
   const visible = reviews.slice(0, settings.number_of_reviews)
 
+  const handleSwipe = (e: React.TouchEvent) => {
+    if (swipeStart === 0) return
+    const diff = swipeStart - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) setIdx((i) => (i + 1) % visible.length)
+      else setIdx((i) => (i - 1 + visible.length) % visible.length)
+    }
+    setSwipeStart(0)
+  }
+
   return (
-    <div className="relative">
+    <div
+      className="relative cursor-grab active:cursor-grabbing"
+      onTouchStart={(e) => setSwipeStart(e.touches[0].clientX)}
+      onTouchEnd={handleSwipe}
+    >
       <ReviewCard review={visible[idx]} settings={settings} />
-      <div className="flex items-center justify-center gap-2 mt-3">
+      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-4">
         <button
           onClick={() => setIdx((i) => (i - 1 + visible.length) % visible.length)}
-          className="w-8 h-8 rounded-full border flex items-center justify-center text-sm hover:opacity-70 transition"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center text-lg sm:text-xl hover:opacity-70 transition"
           style={{ borderColor: settings.accent_color, color: settings.accent_color }}
+          aria-label="Previous review"
         >
           ‹
         </button>
@@ -163,8 +179,9 @@ function CarouselLayout({ reviews, settings }: { reviews: ReviewData[]; settings
         </span>
         <button
           onClick={() => setIdx((i) => (i + 1) % visible.length)}
-          className="w-8 h-8 rounded-full border flex items-center justify-center text-sm hover:opacity-70 transition"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center text-lg sm:text-xl hover:opacity-70 transition"
           style={{ borderColor: settings.accent_color, color: settings.accent_color }}
+          aria-label="Next review"
         >
           ›
         </button>
@@ -183,21 +200,28 @@ function BadgeLayout({ reviews, settings }: { reviews: ReviewData[]; settings: W
     <div className="relative inline-block">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full px-4 py-2 shadow-lg text-sm font-semibold"
+        className="flex items-center gap-2 rounded-full px-4 py-2 sm:px-5 sm:py-2.5 shadow-lg text-sm font-semibold touch-manipulation"
         style={{ backgroundColor: settings.accent_color, color: '#fff' }}
       >
         <span>★ {avg}</span>
         <span className="opacity-80">· Google Reviews</span>
       </button>
       {open && (
-        <div
-          className="absolute bottom-12 left-0 w-80 rounded-xl shadow-2xl border p-4 flex flex-col gap-3 max-h-96 overflow-y-auto z-10"
-          style={{ backgroundColor: settings.background_color, borderColor: `${settings.accent_color}33` }}
-        >
-          {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
-            <ReviewCard key={i} review={r} settings={settings} compact />
-          ))}
-        </div>
+        <>
+          <div
+            className="fixed sm:hidden inset-0 bg-black/40 z-40"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="fixed sm:absolute bottom-0 sm:bottom-12 left-0 sm:left-0 right-0 sm:right-auto w-full sm:w-96 rounded-t-2xl sm:rounded-xl shadow-2xl sm:shadow-lg border-t sm:border p-4 flex flex-col gap-3 max-h-[80vh] sm:max-h-96 overflow-y-auto z-50 sm:z-10"
+            style={{ backgroundColor: settings.background_color, borderColor: `${settings.accent_color}33` }}
+          >
+            {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
+              <ReviewCard key={i} review={r} settings={settings} compact />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )
@@ -229,7 +253,7 @@ export default function WidgetPreview({ initialSettings, reviews }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="rounded-2xl p-5 min-h-48"
+        className="rounded-2xl p-3 sm:p-5 lg:p-6 min-h-48"
         style={{ backgroundColor: settings.background_color }}
       >
         {isEmpty ? (
