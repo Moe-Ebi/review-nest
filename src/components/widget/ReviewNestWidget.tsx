@@ -54,19 +54,25 @@ export default function ReviewNestWidget({
   const sizeClass = width >= 940 ? 'rn--lg' : width >= 640 ? 'rn--md' : 'rn--sm'
 
   // Dashboard colours become CSS-variable defaults — mirroring the embed,
-  // the dark theme palette takes precedence over dashboard bg/text colours.
+  // the dark theme palette takes precedence over dashboard bg/text colours,
+  // and a painted background (default white) is always honoured so the
+  // preview matches what legacy embeds render on client sites.
   const vars: Record<string, string> = {}
   if (settings.accent_color) vars['--rn-primary'] = settings.accent_color
+  let hasBg = false
   if (theme === 'light') {
     const bg = (settings.background_color || '').toLowerCase()
-    if (bg && bg !== '#ffffff' && bg !== 'transparent') vars['--rn-bg'] = settings.background_color
+    if (bg && bg !== 'transparent') {
+      vars['--rn-bg'] = settings.background_color
+      hasBg = true
+    }
     if (settings.text_color) vars['--rn-text'] = settings.text_color
   }
 
   return (
     <div className="rn-scope" data-rn-theme={theme} style={vars as React.CSSProperties}>
       <style dangerouslySetInnerHTML={{ __html: SCOPED_CSS }} />
-      <div ref={wrapRef} className={`rn-wrap ${sizeClass}`}>
+      <div ref={wrapRef} className={`rn-wrap ${sizeClass}${hasBg ? ' rn-has-bg' : ''}`}>
         {resolvedMode === 'badge' ? (
           <TrustBadge reviews={reviews} stats={resolvedStats} cta={cta} />
         ) : (

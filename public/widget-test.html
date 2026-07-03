@@ -56,10 +56,10 @@
     <div data-location-id="demo" data-demo data-primary="#8b5a2b" data-radius="10" data-shadow="1.6" data-headline="Loved by our customers"></div>
   </div>
 
-  <div class="section">
+  <div class="section dark">
     <h2>6. Legacy embed format (existing client installs)</h2>
-    <p class="hint">The old <code>&lt;script data-location&gt;</code> format keeps working — this one also uses <code>data-demo</code> for testing.</p>
-    <script src="/widget.js" data-location="demo" data-demo async></script>
+    <p class="hint">The old <code>&lt;script data-location&gt;</code> format keeps working. <code>data-bg="#ffffff"</code> here simulates the dashboard default background that legacy installs render — a painted white panel guaranteeing contrast even on this dark host section.</p>
+    <script src="/widget.js" data-location="demo" data-demo data-bg="#ffffff" data-text="#111827" async></script>
   </div>
 
   <div class="section">

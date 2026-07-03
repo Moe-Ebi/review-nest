@@ -27,6 +27,8 @@ export const SCOPED_CSS = `
 .rn-scope a{color:inherit}.rn-scope img{display:block;max-width:100%}
 .rn-scope .rn-sr{position:absolute;width:1px;height:1px;clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap}
 .rn-wrap{background:var(--rn-bg);border-radius:calc(var(--rn-radius) + 8px);color:var(--rn-text);line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.rn-wrap.rn-has-bg{padding:22px 18px}
+.rn-wrap.rn-has-bg.rn--sm{padding:16px 12px}
 .rn-summary{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:10px 16px 24px}
 .rn-headline{font-size:27px;font-weight:750;letter-spacing:-.02em;line-height:1.15;color:var(--rn-text)}
 .rn--sm .rn-headline{font-size:21px}

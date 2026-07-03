@@ -81,6 +81,8 @@
 
 '.rn-wrap{background:var(--rn-bg);border-radius:calc(var(--rn-radius) + 8px);color:var(--rn-text);' +
 'line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}' +
+'.rn-wrap.rn-has-bg{padding:22px 18px}' +
+'.rn-wrap.rn-has-bg.rn--sm{padding:16px 12px}' +
 
 /* ----- trust summary ----- */
 '.rn-summary{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:10px 16px 24px}' +
@@ -721,6 +723,9 @@
       mode: attr('data-mode'),
       theme: attr('data-theme'),
       headline: attr('data-headline'),
+      // data-summary="off|false|hidden" hides the trust summary — useful when
+      // the host page already has its own reviews heading above the embed.
+      showSummary: ['off', 'false', 'hidden', '0'].indexOf(String(attr('data-summary') || '').toLowerCase()) === -1,
       ctaText: attr('data-cta-text'),
       ctaUrl: attr('data-cta-url'),
       demo: source.hasAttribute('data-demo'),
@@ -777,14 +782,22 @@
 
       // Dashboard colours become CSS-var defaults. They sit *below* the
       // dark/auto theme palette, host-page CSS on the div, and data-* attrs.
+      // The dashboard background (default white) is always honoured so
+      // legacy embeds keep a painted backdrop — this guarantees contrast
+      // for the summary/dots/footer on dark host sections, as before.
       var vars = [];
       var accent = safeColor(settings.accent_color);
       var bg = safeColor(settings.background_color);
       var text = safeColor(settings.text_color);
       if (accent) vars.push('--rn-primary:' + accent);
-      if (bg && bg.toLowerCase() !== '#ffffff' && bg !== 'transparent') vars.push('--rn-bg:' + bg);
+      if (bg && bg !== 'transparent') vars.push('--rn-bg:' + bg);
       if (text) vars.push('--rn-text:' + text);
       settingsStyle.textContent = vars.length ? ':host{' + vars.join(';') + '}' : '';
+
+      // When the widget backdrop is painted (dashboard bg colour, data-bg,
+      // or host CSS), give the content breathing room inside the panel.
+      var bgVal = getComputedStyle(host).getPropertyValue('--rn-bg').trim();
+      wrap.classList.toggle('rn-has-bg', !!bgVal && bgVal !== 'transparent' && bgVal !== 'none');
 
       var mode = cfg.mode || settings.layout || 'carousel';
       if (mode === 'list') mode = 'grid';
@@ -795,7 +808,7 @@
         return; // badge is intentionally minimal — no summary/footer around it
       }
 
-      wrap.appendChild(trustSummary(data, cfg));
+      if (cfg.showSummary) wrap.appendChild(trustSummary(data, cfg));
 
       if (!reviews.length) {
         wrap.appendChild(el('div', 'rn-note', 'No reviews to display yet.'));
