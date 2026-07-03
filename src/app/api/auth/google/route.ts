@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+// 'email' is required: the callback identifies which Google account connected
+// by reading profile.email from the userinfo endpoint (upsert key on
+// google_connections.google_account_email). 'profile' is not needed.
 const SCOPES = [
   'https://www.googleapis.com/auth/business.manage',
   'email',
-  'profile',
 ].join(' ')
 
 export async function GET() {
