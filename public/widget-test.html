@@ -3,35 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Widget Test Page</title>
+  <title>ReviewNest — Widget Test Page</title>
   <style>
-    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    body { font-family: sans-serif; max-width: 1100px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; color: #111; }
     h1 { color: #111; }
+    h2 { margin-bottom: 8px; }
     .info { background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; }
     .section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .section.dark { background: #0b1220; color: #e2e8f0; }
     code { background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .dark code { background: #1e293b; }
+    pre { background: #f0f0f0; padding: 12px; border-radius: 8px; font-size: 12.5px; overflow-x: auto; }
+    p.hint { font-size: 13px; color: #666; margin-bottom: 16px; }
+    .dark p.hint { color: #94a3b8; }
   </style>
 </head>
 <body>
   <h1>ReviewNest — Widget Test Page</h1>
 
   <div class="info">
-    <strong>How to use:</strong> Replace <code>YOUR_LOCATION_ID</code> in the script tag below with a real location ID from your dashboard.
-    The widget will load reviews from your local dev server.
+    <strong>Demo mode:</strong> the widgets below use <code>data-demo</code> (sample reviews, no API call).
+    To test with real data, replace with <code>data-location-id="YOUR_LOCATION_ID"</code> and remove <code>data-demo</code>.
   </div>
 
   <div class="section">
-    <h2>Widget preview</h2>
-    <p>The widget renders below this paragraph, inside its own isolated Shadow DOM.</p>
+    <h2>1. Luxury Trust Carousel — light (default)</h2>
+    <p class="hint">Desktop: 3 cards · Tablet: 2 cards · Mobile: 1 card + swipe. Arrows, dots, keyboard navigation, "Read more" on long reviews.</p>
+    <div data-location-id="demo" data-demo data-cta-text="Read all reviews on Google" data-cta-url="https://google.com"></div>
+  </div>
 
-    <!-- PASTE YOUR EMBED SNIPPET HERE — replace YOUR_LOCATION_ID -->
-    <script src="http://localhost:3000/widget.js" data-location="YOUR_LOCATION_ID" async></script>
+  <div class="section dark">
+    <h2>2. Carousel — dark mode</h2>
+    <p class="hint">Same widget with <code>data-theme="dark"</code> on a dark host section.</p>
+    <div data-location-id="demo" data-demo data-theme="dark"></div>
   </div>
 
   <div class="section">
-    <h2>Surrounding content</h2>
-    <p>This text proves the widget does not affect the host page's styles. Everything here looks exactly the same as it would without the widget.</p>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    <h2>3. Compact trust badge</h2>
+    <p class="hint">For headers, product pages, cart and checkout. Click to open the review panel.</p>
+    <div data-location-id="demo" data-demo data-mode="badge"></div>
   </div>
+
+  <div class="section">
+    <h2>4. Review wall (masonry grid)</h2>
+    <p class="hint">For dedicated review pages: <code>data-mode="grid"</code>.</p>
+    <div data-location-id="demo" data-demo data-mode="grid"></div>
+  </div>
+
+  <div class="section">
+    <h2>5. Custom branding via CSS variables</h2>
+    <p class="hint">Warm brand accent, amber stars kept, tighter radius, stronger shadows — all via <code>data-*</code> attributes.</p>
+    <div data-location-id="demo" data-demo data-primary="#8b5a2b" data-radius="10" data-shadow="1.6" data-headline="Loved by our customers"></div>
+  </div>
+
+  <div class="section">
+    <h2>6. Legacy embed format (existing client installs)</h2>
+    <p class="hint">The old <code>&lt;script data-location&gt;</code> format keeps working — this one also uses <code>data-demo</code> for testing.</p>
+    <script src="/widget.js" data-location="demo" data-demo async></script>
+  </div>
+
+  <div class="section">
+    <h2>Embed snippet (copy for clients)</h2>
+    <pre>&lt;div id="reviewnest-widget"
+     data-location-id="YOUR_LOCATION_ID"
+     data-mode="carousel"&gt;&lt;/div&gt;
+&lt;script src="https://reviewnest.ebiconsulting.co.za/widget.js" async&gt;&lt;/script&gt;</pre>
+  </div>
+
+  <script src="/widget.js" async></script>
 </body>
 </html>

@@ -35,13 +35,22 @@ export async function GET(
 
   const minRating = settings?.min_star_rating ?? 4
   const count = settings?.number_of_reviews ?? 10
-  const filtered = (reviews ?? [])
+  const all = reviews ?? []
+  const filtered = all
     .filter((r) => r.star_rating >= minRating)
     .slice(0, count)
+
+  // Stats reflect ALL synced reviews (not the filtered subset) so the trust
+  // summary shows honest totals even when the widget displays a capped list.
+  const total = all.length
+  const average = total
+    ? Math.round((all.reduce((s, r) => s + r.star_rating, 0) / total) * 10) / 10
+    : 0
 
   return NextResponse.json(
     {
       location: { id: location.id, name: location.business_name },
+      stats: { total, average },
       settings: settings ?? {
         layout: 'grid',
         accent_color: '#3b82f6',

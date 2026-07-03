@@ -1,26 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import ReviewNestWidget from '@/components/widget/ReviewNestWidget'
+import type { ReviewData, WidgetSettings, WidgetTheme } from '@/components/widget/types'
 
-export interface WidgetSettings {
-  layout: 'carousel' | 'grid' | 'list' | 'badge'
-  accent_color: string
-  background_color: string
-  text_color: string
-  number_of_reviews: number
-  min_star_rating: number
-  show_agency_branding: boolean
-  agency_name: string
-  agency_url: string
-}
-
-export interface ReviewData {
-  reviewer_name: string
-  reviewer_photo_url: string | null
-  star_rating: number
-  review_text: string | null
-  review_date: string
-}
+// Re-exported so existing imports (SettingsForm, dashboard pages) keep working.
+export type { WidgetSettings, ReviewData }
 
 const PLACEHOLDER_REVIEWS: ReviewData[] = [
   {
@@ -34,7 +19,7 @@ const PLACEHOLDER_REVIEWS: ReviewData[] = [
     reviewer_name: 'James T.',
     reviewer_photo_url: null,
     star_rating: 5,
-    review_text: 'Outstanding experience from start to finish. Very impressed with the attention to detail and the friendly staff.',
+    review_text: 'Outstanding experience from start to finish. Very impressed with the attention to detail and the friendly staff. From the first phone call to the final handover everything was communicated clearly, deadlines were met, and the pricing was exactly as quoted with no surprises at all. Genuinely impressed and will absolutely be using them again.',
     review_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
   },
   {
@@ -60,173 +45,6 @@ const PLACEHOLDER_REVIEWS: ReviewData[] = [
   },
 ]
 
-function StarRating({ rating, color }: { rating: number; color: string }) {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <svg key={s} className="w-4 h-4" fill={s <= rating ? color : '#d1d5db'} viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      ))}
-    </div>
-  )
-}
-
-function Avatar({ name, photoUrl }: { name: string; photoUrl: string | null }) {
-  if (photoUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={photoUrl} alt={name} className="w-10 h-10 rounded-full object-cover" />
-  }
-  return (
-    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold text-sm shrink-0">
-      {name.charAt(0).toUpperCase()}
-    </div>
-  )
-}
-
-function ReviewCard({
-  review,
-  settings,
-  compact = false,
-}: {
-  review: ReviewData
-  settings: WidgetSettings
-  compact?: boolean
-}) {
-  const date = new Date(review.review_date).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  })
-
-  return (
-    <div
-      className="rounded-xl border p-3 sm:p-4 flex flex-col gap-2 sm:gap-3"
-      style={{
-        backgroundColor: settings.background_color,
-        borderColor: `${settings.accent_color}33`,
-        color: settings.text_color,
-      }}
-    >
-      <div className="flex items-start gap-2 sm:gap-3">
-        <Avatar name={review.reviewer_name} photoUrl={review.reviewer_photo_url} />
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-xs sm:text-sm truncate">{review.reviewer_name}</p>
-          <StarRating rating={review.star_rating} color={settings.accent_color} />
-        </div>
-        <span className="text-xs opacity-50 shrink-0 ml-2">{date}</span>
-      </div>
-      {review.review_text && (
-        <p className={`text-xs sm:text-sm opacity-80 leading-relaxed ${compact ? 'line-clamp-3 sm:line-clamp-3' : 'line-clamp-3 sm:line-clamp-4 lg:line-clamp-5'}`}>
-          {review.review_text}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function GridLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
-      {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
-        <ReviewCard key={i} review={r} settings={settings} compact />
-      ))}
-    </div>
-  )
-}
-
-function ListLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
-  return (
-    <div className="flex flex-col gap-3">
-      {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
-        <ReviewCard key={i} review={r} settings={settings} />
-      ))}
-    </div>
-  )
-}
-
-function CarouselLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
-  const [idx, setIdx] = useState(0)
-  const [swipeStart, setSwipeStart] = useState(0)
-  const visible = reviews.slice(0, settings.number_of_reviews)
-
-  const handleSwipe = (e: React.TouchEvent) => {
-    if (swipeStart === 0) return
-    const diff = swipeStart - e.changedTouches[0].clientX
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) setIdx((i) => (i + 1) % visible.length)
-      else setIdx((i) => (i - 1 + visible.length) % visible.length)
-    }
-    setSwipeStart(0)
-  }
-
-  return (
-    <div
-      className="relative cursor-grab active:cursor-grabbing"
-      onTouchStart={(e) => setSwipeStart(e.touches[0].clientX)}
-      onTouchEnd={handleSwipe}
-    >
-      <ReviewCard review={visible[idx]} settings={settings} />
-      <div className="flex items-center justify-center gap-3 sm:gap-4 mt-4">
-        <button
-          onClick={() => setIdx((i) => (i - 1 + visible.length) % visible.length)}
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center text-lg sm:text-xl hover:opacity-70 transition"
-          style={{ borderColor: settings.accent_color, color: settings.accent_color }}
-          aria-label="Previous review"
-        >
-          ‹
-        </button>
-        <span className="text-xs opacity-50" style={{ color: settings.text_color }}>
-          {idx + 1} / {visible.length}
-        </span>
-        <button
-          onClick={() => setIdx((i) => (i + 1) % visible.length)}
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center text-lg sm:text-xl hover:opacity-70 transition"
-          style={{ borderColor: settings.accent_color, color: settings.accent_color }}
-          aria-label="Next review"
-        >
-          ›
-        </button>
-      </div>
-    </div>
-  )
-}
-
-function BadgeLayout({ reviews, settings }: { reviews: ReviewData[]; settings: WidgetSettings }) {
-  const [open, setOpen] = useState(false)
-  const avg = reviews.length
-    ? (reviews.reduce((s, r) => s + r.star_rating, 0) / reviews.length).toFixed(1)
-    : '5.0'
-
-  return (
-    <div className="relative inline-block">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full px-4 py-2 sm:px-5 sm:py-2.5 shadow-lg text-sm font-semibold touch-manipulation"
-        style={{ backgroundColor: settings.accent_color, color: '#fff' }}
-      >
-        <span>★ {avg}</span>
-        <span className="opacity-80">· Google Reviews</span>
-      </button>
-      {open && (
-        <>
-          <div
-            className="fixed sm:hidden inset-0 bg-black/40 z-40"
-            onClick={() => setOpen(false)}
-            aria-hidden="true"
-          />
-          <div
-            className="fixed sm:absolute bottom-0 sm:bottom-12 left-0 sm:left-0 right-0 sm:right-auto w-full sm:w-96 rounded-t-2xl sm:rounded-xl shadow-2xl sm:shadow-lg border-t sm:border p-4 flex flex-col gap-3 max-h-[80vh] sm:max-h-96 overflow-y-auto z-50 sm:z-10"
-            style={{ backgroundColor: settings.background_color, borderColor: `${settings.accent_color}33` }}
-          >
-            {reviews.slice(0, settings.number_of_reviews).map((r, i) => (
-              <ReviewCard key={i} review={r} settings={settings} compact />
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
 interface Props {
   initialSettings: WidgetSettings
   reviews: ReviewData[]
@@ -234,6 +52,7 @@ interface Props {
 
 export default function WidgetPreview({ initialSettings, reviews }: Props) {
   const [settings, setSettings] = useState<WidgetSettings>(initialSettings)
+  const [theme, setTheme] = useState<WidgetTheme>('light')
 
   // Listen for settings changes from the form via a custom event
   useEffect(() => {
@@ -244,45 +63,31 @@ export default function WidgetPreview({ initialSettings, reviews }: Props) {
     return () => window.removeEventListener('widget-settings-change', handler as EventListener)
   }, [])
 
-  const displayReviews = reviews.length > 0
-    ? reviews.filter((r) => r.star_rating >= settings.min_star_rating)
-    : PLACEHOLDER_REVIEWS.filter((r) => r.star_rating >= settings.min_star_rating)
-
-  const isEmpty = displayReviews.length === 0
+  const source = reviews.length > 0 ? reviews : PLACEHOLDER_REVIEWS
+  const displayReviews = source
+    .filter((r) => r.star_rating >= settings.min_star_rating)
+    .slice(0, settings.number_of_reviews)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div
-        className="rounded-2xl p-3 sm:p-5 lg:p-6 min-h-48"
-        style={{ backgroundColor: settings.background_color }}
-      >
-        {isEmpty ? (
-          <p className="text-center text-sm opacity-40 py-8" style={{ color: settings.text_color }}>
-            No reviews match the minimum star rating.
-          </p>
-        ) : settings.layout === 'grid' ? (
-          <GridLayout reviews={displayReviews} settings={settings} />
-        ) : settings.layout === 'list' ? (
-          <ListLayout reviews={displayReviews} settings={settings} />
-        ) : settings.layout === 'carousel' ? (
-          <CarouselLayout reviews={displayReviews} settings={settings} />
-        ) : (
-          <BadgeLayout reviews={displayReviews} settings={settings} />
-        )}
+    <div className="flex flex-col gap-3">
+      <div className="flex justify-end gap-1">
+        {(['light', 'dark'] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTheme(t)}
+            className={`text-xs px-3 py-1 rounded-full border transition ${
+              theme === t
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'text-gray-500 border-gray-300 hover:border-gray-400'
+            }`}
+          >
+            {t === 'light' ? 'Light' : 'Dark'}
+          </button>
+        ))}
+      </div>
 
-        {settings.show_agency_branding && (
-          <div className="mt-4 pt-3 border-t flex items-center gap-1.5" style={{ borderColor: `${settings.text_color}15` }}>
-            <span className="text-xs opacity-40" style={{ color: settings.text_color }}>
-              Powered by{' '}
-              <a href={settings.agency_url} className="underline" style={{ color: settings.accent_color }}>
-                {settings.agency_name}
-              </a>
-            </span>
-            <span className="text-xs opacity-30 ml-auto" style={{ color: settings.text_color }}>
-              Reviews from Google
-            </span>
-          </div>
-        )}
+      <div className={`rounded-2xl p-3 sm:p-5 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
+        <ReviewNestWidget reviews={displayReviews} settings={settings} theme={theme} />
       </div>
 
       {reviews.length === 0 && (
