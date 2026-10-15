@@ -66,6 +66,7 @@ export async function GET(
       stats: { total, average },
       settings: settings ?? {
         layout: 'grid',
+        theme: 'light',
         accent_color: '#3b82f6',
         background_color: '#ffffff',
         text_color: '#111827',

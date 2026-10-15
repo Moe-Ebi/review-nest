@@ -16,7 +16,7 @@
  *
  * Optional attributes (on the div, or on the legacy script tag):
  *   data-mode      carousel | grid | badge   (overrides dashboard layout setting)
- *   data-theme     light | dark | auto       (default: light / dashboard colours)
+ *   data-theme     light | dark | auto       (overrides the dashboard theme setting)
  *   data-headline  Custom trust-summary headline
  *   data-cta-text  + data-cta-url            Optional CTA button below the widget
  *   data-demo      Render sample reviews without fetching (demos/testing)
@@ -777,6 +777,11 @@
     function render(data) {
       wrap.textContent = '';
       var settings = data.settings || {};
+
+      // Theme: data-theme on the embed wins; otherwise use the dashboard setting.
+      var theme = cfg.theme || settings.theme;
+      if (theme === 'dark' || theme === 'auto') host.setAttribute('data-rn-theme', theme);
+      else host.removeAttribute('data-rn-theme');
       var reviews = data.reviews || [];
       var state = { expanded: {} };
 

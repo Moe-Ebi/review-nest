@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import ReviewNestWidget from '@/components/widget/ReviewNestWidget'
-import type { ReviewData, WidgetSettings, WidgetTheme } from '@/components/widget/types'
+import type { ReviewData, WidgetSettings } from '@/components/widget/types'
 
 // Re-exported so existing imports (SettingsForm, dashboard pages) keep working.
 export type { WidgetSettings, ReviewData }
@@ -52,7 +52,8 @@ interface Props {
 
 export default function WidgetPreview({ initialSettings, reviews }: Props) {
   const [settings, setSettings] = useState<WidgetSettings>(initialSettings)
-  const [theme, setTheme] = useState<WidgetTheme>('light')
+  // 'auto' follows the visitor's device on the live site; preview shows light.
+  const theme = settings.theme === 'dark' ? 'dark' : 'light'
 
   // Listen for settings changes from the form via a custom event
   useEffect(() => {
@@ -70,22 +71,6 @@ export default function WidgetPreview({ initialSettings, reviews }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex justify-end gap-1">
-        {(['light', 'dark'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTheme(t)}
-            className={`text-xs px-3 py-1 rounded-full border transition ${
-              theme === t
-                ? 'bg-gray-900 text-white border-gray-900'
-                : 'text-gray-500 border-gray-300 hover:border-gray-400'
-            }`}
-          >
-            {t === 'light' ? 'Light' : 'Dark'}
-          </button>
-        ))}
-      </div>
-
       <div className={`rounded-2xl p-3 sm:p-5 ${theme === 'dark' ? 'bg-gray-950' : 'bg-gray-50'}`}>
         <ReviewNestWidget reviews={displayReviews} settings={settings} theme={theme} />
       </div>

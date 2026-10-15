@@ -12,6 +12,7 @@ interface Props {
 
 const DEFAULT_SETTINGS: WidgetSettings = {
   layout: 'grid',
+  theme: 'light',
   accent_color: '#3b82f6',
   background_color: '#ffffff',
   text_color: '#111827',
@@ -49,6 +50,7 @@ export default async function LocationSettingsPage({ params, searchParams }: Pro
   const settings: WidgetSettings = dbSettings
     ? {
         layout: dbSettings.layout,
+        theme: dbSettings.theme ?? 'light',
         accent_color: dbSettings.accent_color,
         background_color: dbSettings.background_color,
         text_color: dbSettings.text_color,
