@@ -7,7 +7,7 @@ import type { WidgetSettings } from '@/components/widget-preview/WidgetPreview'
 
 interface Props {
   params: Promise<{ locationId: string }>
-  searchParams: Promise<{ saved?: string }>
+  searchParams: Promise<{ saved?: string; error?: string }>
 }
 
 const DEFAULT_SETTINGS: WidgetSettings = {
@@ -25,7 +25,7 @@ const DEFAULT_SETTINGS: WidgetSettings = {
 
 export default async function LocationSettingsPage({ params, searchParams }: Props) {
   const { locationId } = await params
-  const { saved } = await searchParams
+  const { saved, error: saveError } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -98,6 +98,7 @@ export default async function LocationSettingsPage({ params, searchParams }: Pro
               locationId={locationId}
               settings={settings}
               saved={saved === '1'}
+              error={saveError}
             />
           </div>
 
