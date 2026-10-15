@@ -66,7 +66,7 @@ Built in 8 phases (all phases 1–8 are complete and confirmed working). Key fea
 - `src/app/api/auth/google/route.ts` — admin Google OAuth init (`prompt: 'select_account consent'`)
 - `src/app/api/auth/google/client/route.ts` — client Google OAuth init (same prompt setting)
 - `src/app/api/auth/google/callback/route.ts` — OAuth callback, routes admin vs client via base64 `state` param
-- `src/app/api/widget/[locationId]/route.ts` — public CORS-open widget data endpoint
+- `src/app/api/widget/[locationId]/route.ts` — public CORS-open widget data endpoint (CDN cache: 60s + 5 min stale; `no-store` when there are zero reviews or a query error)
 - `src/app/api/cron/sync-reviews/route.ts` — Vercel Cron endpoint (secured with `CRON_SECRET` bearer token)
 - `vercel.json` — cron schedule `0 3 * * *`
 - `public/widget.js` — the embeddable widget script
@@ -76,7 +76,7 @@ Built in 8 phases (all phases 1–8 are complete and confirmed working). Key fea
 - `src/app/login/page.tsx`, `src/app/signup/page.tsx` — auth pages
 - `src/app/dashboard/...` — admin dashboard, location settings, connect flow
 - `src/app/client/...` — client dashboard, connect flow
-- `supabase/migrations/001` through `005` — all run successfully in production DB
+- `supabase/migrations/001` through `006` — all run successfully in production DB (006 adds `widget_settings.theme`; run by owner in Supabase on 2026-10-15)
 
 ---
 
@@ -137,6 +137,17 @@ This was the main thread of work in the most recent session. Sequence of events:
    - **✅ APPROVAL RECEIVED** — Google sent the email: *"Congratulations! Your project has been approved to use the Google Business Profile API!"* Quota should now be raised from 0 to 300 QPM.
 
 5. **Current status / what's NOT yet confirmed:** After receiving the approval email, I have **not yet re-tested** connecting a Google account and verifying locations actually load now. This is the **next immediate step** to verify before moving on.
+
+---
+
+## 6b. Widget settings & embed fixes (2026-10-15) — all merged and confirmed working
+
+- **Settings not showing on client sites** (Rosewall McCarthy carousel/branding; Eurotrend "0 reviews"): cause was the widget API being CDN-cached for 1h + 24h stale. Now 60s + 5 min, and empty/error responses are never cached.
+- **Theme is now a saved setting** (`light` | `dark` | `auto`, column `widget_settings.theme`, migration 006). `public/widget.js` uses it unless the embed has its own `data-theme` (which wins). `data-mode` on an embed likewise overrides the dashboard layout — remove hard-coded `data-theme`/`data-mode` if a site ignores dashboard settings.
+- **Save errors are now visible**: `saveWidgetSettings` checks the Supabase error and the form shows a red "Could not save settings: …" banner. (Previously a missing column made saves silently revert.)
+- Lesson: after adding a migration, it must be run in the **same Supabase project the app uses**, then `notify pgrst, 'reload schema';`.
+- After the migration, each client's settings had to be re-saved once (earlier saves were rejected).
+- PRs: #1 cache, #2 theme, #3 error banner (all squash-merged to `master`).
 
 ---
 
