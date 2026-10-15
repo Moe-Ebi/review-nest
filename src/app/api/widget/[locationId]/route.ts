@@ -18,7 +18,11 @@ export async function GET(
   const { locationId } = await params
   const admin = createAdminClient()
 
-  const [{ data: location }, { data: settings }, { data: reviews }] = await Promise.all([
+  const [
+    { data: location },
+    { data: settings, error: settingsError },
+    { data: reviews, error: reviewsError },
+  ] = await Promise.all([
     admin.from('locations').select('id, business_name').eq('id', locationId).single(),
     admin.from('widget_settings').select('*').eq('location_id', locationId).single(),
     admin
@@ -47,6 +51,15 @@ export async function GET(
     ? Math.round((all.reduce((s, r) => s + r.star_rating, 0) / total) * 10) / 10
     : 0
 
+  // Keep the CDN window short so dashboard changes reach client sites within
+  // about a minute. Never cache a response that could be incomplete (no
+  // reviews yet, missing settings row, or a query error) — a stale "zero
+  // reviews" payload would otherwise stick on the client's site.
+  const incomplete = !!reviewsError || (!!settingsError && settingsError.code !== 'PGRST116') || total === 0
+  const cacheControl = incomplete
+    ? 'no-store'
+    : 'public, s-maxage=60, stale-while-revalidate=300'
+
   return NextResponse.json(
     {
       location: { id: location.id, name: location.business_name },
@@ -64,6 +77,6 @@ export async function GET(
       },
       reviews: filtered,
     },
-    { headers: { ...CORS, 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } }
+    { headers: { ...CORS, 'Cache-Control': cacheControl } }
   )
 }

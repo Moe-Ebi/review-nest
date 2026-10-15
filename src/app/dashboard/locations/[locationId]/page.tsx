@@ -122,7 +122,7 @@ export default async function LocationSettingsPage({ params, searchParams }: Pro
                 {`<script src="${process.env.NEXTAUTH_URL}/widget.js" data-location="${locationId}" async></script>`}
               </div>
               <p className="text-gray-600 text-xs mt-3">
-                The widget auto-updates every 24 hours. No other changes needed after pasting.
+                Setting changes appear on the website within a minute or two. No other changes needed after pasting.
               </p>
             </div>
           </div>
