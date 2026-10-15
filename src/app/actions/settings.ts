@@ -12,7 +12,7 @@ export async function saveWidgetSettings(formData: FormData) {
   const locationId = formData.get('locationId') as string
 
   const admin = createAdminClient()
-  await admin.from('widget_settings').upsert(
+  const { error } = await admin.from('widget_settings').upsert(
     {
       location_id: locationId,
       layout: formData.get('layout') as string,
@@ -31,6 +31,11 @@ export async function saveWidgetSettings(formData: FormData) {
     },
     { onConflict: 'location_id' }
   )
+
+  if (error) {
+    console.error('saveWidgetSettings failed', error)
+    redirect(`/dashboard/locations/${locationId}?error=${encodeURIComponent(error.message)}`)
+  }
 
   redirect(`/dashboard/locations/${locationId}?saved=1`)
 }

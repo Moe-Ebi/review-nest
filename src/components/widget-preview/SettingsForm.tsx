@@ -8,6 +8,7 @@ interface Props {
   locationId: string
   settings: WidgetSettings
   saved: boolean
+  error?: string
 }
 
 function notify(patch: Partial<WidgetSettings>) {
@@ -16,7 +17,7 @@ function notify(patch: Partial<WidgetSettings>) {
   )
 }
 
-export default function SettingsForm({ locationId, settings, saved }: Props) {
+export default function SettingsForm({ locationId, settings, saved, error }: Props) {
   const handle = useCallback(
     (field: keyof WidgetSettings) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -37,6 +38,12 @@ export default function SettingsForm({ locationId, settings, saved }: Props) {
       {saved && (
         <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg px-4 py-2.5">
           Settings saved ✓
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-2.5">
+          Could not save settings: {error}
         </div>
       )}
 
