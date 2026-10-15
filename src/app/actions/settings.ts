@@ -16,6 +16,9 @@ export async function saveWidgetSettings(formData: FormData) {
     {
       location_id: locationId,
       layout: formData.get('layout') as string,
+      theme: ['light', 'dark', 'auto'].includes(formData.get('theme') as string)
+        ? (formData.get('theme') as string)
+        : 'light',
       accent_color: formData.get('accent_color') as string,
       background_color: formData.get('background_color') as string,
       text_color: formData.get('text_color') as string,

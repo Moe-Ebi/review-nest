@@ -2,6 +2,7 @@
 
 export interface WidgetSettings {
   layout: 'carousel' | 'grid' | 'list' | 'badge'
+  theme?: WidgetTheme
   accent_color: string
   background_color: string
   text_color: string

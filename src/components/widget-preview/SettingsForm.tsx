@@ -62,6 +62,29 @@ export default function SettingsForm({ locationId, settings, saved }: Props) {
         </div>
       </div>
 
+      {/* Theme */}
+      <div>
+        <label className="block text-sm font-medium text-gray-300 mb-2">Theme</label>
+        <div className="grid grid-cols-3 gap-2">
+          {(['light', 'dark', 'auto'] as const).map((t) => (
+            <label key={t} className="cursor-pointer">
+              <input
+                type="radio"
+                name="theme"
+                value={t}
+                defaultChecked={(settings.theme ?? 'light') === t}
+                onChange={handle('theme')}
+                className="sr-only peer"
+              />
+              <div className="text-center text-xs py-2 px-1 rounded-lg border border-gray-700 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 peer-checked:text-blue-400 text-gray-400 transition capitalize">
+                {t}
+              </div>
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-1.5">Auto follows the visitor&apos;s device setting.</p>
+      </div>
+
       {/* Colours */}
       <div className="grid grid-cols-3 gap-4">
         {[
