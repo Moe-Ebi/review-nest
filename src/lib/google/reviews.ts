@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { refreshAccessToken } from '@/lib/google/locations'
+import { pruneStaleReviews } from '@/lib/google/prune-reviews'
 
 interface GoogleReview {
   name: string
@@ -121,6 +122,20 @@ export async function syncReviewsForLocation(locationId: string): Promise<{
 
   if (upsertError) {
     return { synced: 0, error: upsertError.message }
+  }
+
+  // Google's list is the source of truth: drop stored reviews it no longer
+  // returns (deleted on Google, or duplicates saved under an older id).
+  // Only reached after a complete fetch, so a failed sync never prunes.
+  const pruned = await pruneStaleReviews(
+    admin,
+    locationId,
+    new Set(rows.map((r) => r.google_review_id))
+  )
+  if (pruned.error) {
+    console.error('[Reviews] prune failed for', locationId, ':', pruned.error)
+  } else if (pruned.removed > 0) {
+    console.log('[Reviews] removed', pruned.removed, 'stale/duplicate reviews for', locationId)
   }
 
   // Update last_synced_at and review_count on the location
